@@ -18,6 +18,7 @@
       .munkalap {
         height: 100vh;
         display: flex;
+        margin: 0;
         align-items: center;
         justify-content: center;
         flex-direction: column;
@@ -28,8 +29,51 @@
         box-shadow: 0px 6px 15px 0 rgba(0, 0, 0, 0.25);
       }
 
+      .add {
+        width: 15vw;
+        height: 15vh;
+        position: absolute;
+        padding: 2vw;
+        border-radius: 1rem;
+        background-color: #fff;
+        box-shadow: 0px 0px 15px 0 #00000059;
+
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .buttons {
+        width: 60%;
+        display: flex;
+        justify-content: space-around;
+      }
+
+      .buttons input {
+        width: 4rem;
+        height: 1.5rem;
+        border: none;
+        border-radius: 0.3rem;
+      }
+
+      .buttons input:first-of-type {
+        background-color: #98fa7a;
+        color: white;
+      }
+
+      .buttons input:last-of-type {
+        background-color: #e23838;
+        color: white;
+      }
+
+      .radius {
+        position: absolute;
+        display: none;
+      }
+
       .controlls {
-        width: 200px;
+        min-width: 200px;
         position: absolute;
         bottom: 1rem;
         padding: 0.5rem;
@@ -38,15 +82,37 @@
 
         display: flex;
         justify-content: space-around;
+        box-shadow: 0px 0px 15px #00000033;
       }
 
-      .controlls input {
+      .controlls a {
+        color: black;
+        text-decoration: none;
+      }
+
+      .controlls a:visited {
+        color: black;
+      }
+
+      .controlls a:hover {
+        color: #23b6fa;
+        cursor: pointer;
+      }
+
+      .controlls input,
+      a {
         padding: 0.5rem;
+        min-width: 3rem;
         border: none;
         background-color: transparent;
 
         font-size: 140%;
         font-weight: 600;
+      }
+
+      .controlls input:hover {
+        color: #23b6fa;
+        cursor: pointer;
       }
     </style>
 
@@ -57,9 +123,54 @@
       contenteditable="true"
     ></canvas>
     <div class="controlls">
-      <input type="button" value="+" />
-      <input type="button" value="-" />
-      <input type="button" value="Export" />
+      <input type="button" value="+" id="add" />
+      <input type="button" value="-" id="remove" />
+      <input type="button" value="°" id="radius" />
+      <a href="#" id="export">Export</a>
+    </div>
+
+    <div class="add">
+      <input
+        type="number"
+        id="width"
+        placeholder="width"
+        min="20"
+        max="10000"
+      />
+      <input
+        type="number"
+        id="length"
+        placeholder="height"
+        min="20"
+        max="10000"
+      />
+      <div class="buttons">
+        <input type="button" value="OK" id="ok" />
+        <input type="button" value="Bezár" id="close" />
+      </div>
+    </div>
+
+    <div class="radius">
+      <div class="topLeft">
+        <input type="number" id="topLeftX" />
+        <input type="number" id="topLeftRadius" />
+        <input type="number" id="topLeftY" />
+      </div>
+      <div class="topRight">
+        <input type="number" id="topRightX" />
+        <input type="number" id="topRightRadius" />
+        <input type="number" id="topRightY" />
+      </div>
+      <div class="bottomLeft">
+        <input type="number" id="bottomLeftX" />
+        <input type="number" id="bottomLeftRadius" />
+        <input type="number" id="bottomLeftY" />
+      </div>
+      <div class="topRight">
+        <input type="number" id="bottomRightX" />
+        <input type="number" id="bottomRightRadius" />
+        <input type="number" id="bottomRightY" />
+      </div>
     </div>
 
     <script
