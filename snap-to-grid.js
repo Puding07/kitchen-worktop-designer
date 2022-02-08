@@ -26,14 +26,15 @@ var canvas = new fabric.Canvas("canvas", {
 
 /**
  * To add radius I have to play with the bezierCurveTo and magic number...
+ * with the help of (https://pomax.github.io/bezierinfo/#circles_cubic)
  */
 
 const RoundedRect = new fabric.util.createClass(fabric.Rect, {
   type: "roundedRect",
-  topLeft: [20, 20],
-  topRight: [20, 20],
-  bottomLeft: [20, 20],
-  bottomRight: [20, 20],
+  topLeft: 20,
+  topRight: 20,
+  bottomLeft: 20,
+  bottomRight: 20,
 
   _render: function (ctx) {
     var w = this.width,
@@ -44,53 +45,53 @@ const RoundedRect = new fabric.util.createClass(fabric.Rect, {
        * "magic number" for bezier approximations of arcs (http://hansmuller-flex.blogspot.com/2011/04/approximating-circular-arc-with-cubic.html)
        * example is at: (https://codepen.io/nfarahani/pen/QwrMyW)
        */
-      k = 1 - 0.5522847498;
+      k = 1 - 0.5522847498; // quarter circle k = 0.551785
     ctx.beginPath();
 
     // top left
-    ctx.moveTo(x + this.topLeft[0], y);
+    ctx.moveTo(x + this.topLeft, y);
 
     // line to top right
-    ctx.lineTo(x + w - this.topRight[0], y);
+    ctx.lineTo(x + w - this.topRight, y);
     ctx.bezierCurveTo(
-      x + w - k * this.topRight[0],
+      x + w - k * this.topRight,
       y,
       x + w,
-      y + k * this.topRight[1],
+      y + k * this.topRight,
       x + w,
-      y + this.topRight[1]
+      y + this.topRight
     );
 
     // line to bottom right
-    ctx.lineTo(x + w, y + h - this.bottomRight[1]);
+    ctx.lineTo(x + w, y + h - this.bottomRight);
     ctx.bezierCurveTo(
       x + w,
-      y + h - k * this.bottomRight[1],
-      x + w - k * this.bottomRight[0],
+      y + h - k * this.bottomRight,
+      x + w - k * this.bottomRight,
       y + h,
-      x + w - this.bottomRight[0],
+      x + w - this.bottomRight,
       y + h
     );
 
     // line to bottom left
-    ctx.lineTo(x + this.bottomLeft[0], y + h);
+    ctx.lineTo(x + this.bottomLeft, y + h); // 10, 10
     ctx.bezierCurveTo(
-      x + k * this.bottomLeft[0],
+      x + k * this.bottomLeft,
       y + h,
       x,
-      y + h - k * this.bottomLeft[1],
+      y + h - k * this.bottomLeft,
       x,
-      y + h - this.bottomLeft[1]
+      y + h - this.bottomLeft
     );
 
     // line to top left
-    ctx.lineTo(x, y + this.topLeft[1]);
+    ctx.lineTo(x, y + this.topLeft); // -10, 10
     ctx.bezierCurveTo(
       x,
-      y + k * this.topLeft[1],
-      x + k * this.topLeft[0],
+      y + k * this.topLeft,
+      x + k * this.topLeft,
       y,
-      x + this.topLeft[0],
+      x + this.topLeft,
       y
     );
 
@@ -161,10 +162,10 @@ for (var i = 0; i < 10001 / grid; i++) {
 
 canvas.add(
   new RoundedRect({
-    topLeft: [0, 0],
-    topRight: [0, 0],
-    bottomLeft: [0, 0],
-    bottomRight: [0, 0],
+    topLeft: 0,
+    topRight: 0,
+    bottomLeft: 0,
+    bottomRight: 0,
     left: 1000,
     top: 1000,
     width: 2000,
@@ -298,6 +299,7 @@ canvas.on("object:rotating", function (opt) {
 
 canvas.on("selection:created", function (e) {
   selected = true;
+  console.log(e);
 });
 
 canvas.on("selection:cleared", function () {
@@ -430,9 +432,9 @@ function addMm() {
 function radius() {
   var activeObject = canvas.getActiveObject();
 
-  var val = 200;
+  var val = 100;
   console.log(activeObject);
-  activeObject.set({ topLeft: [10, 10] });
+  activeObject.set({ topLeft: val });
 
   activeObject.setCoords();
 
@@ -467,10 +469,10 @@ function addToCanvas() {
 
   canvas.add(
     new RoundedRect({
-      topLeft: [0, 0],
-      topRight: [0, 0],
-      bottomLeft: [0, 0],
-      bottomRight: [0, 0],
+      topLeft: 0,
+      topRight: 0,
+      bottomLeft: 0,
+      bottomRight: 0,
       left: 3000,
       top: 3000,
       width: Number(width),
@@ -491,14 +493,41 @@ function addToCanvas() {
 function Export(e) {
   removeMm();
   removeCm();
+  canvas.renderAll();
+
+  addCm();
+  addMm();
+  canvas.renderAll();
 
   canvas.backgroundColor = "white";
   canvas.zoomToPoint({ x: 725, y: 223 }, 0.05);
   canvas.renderAll();
 
-  this.href = canvas.toDataURL({
-    format: "jpeg",
-    quality: 0.8,
-  });
-  this.download = "canvas.png";
+  const svg = canvas.toSVG();
+
+  //convert svg source to URI data scheme.
+  var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+
+  this.href = url;
+  this.download = "canvas.svg";
+
+  setTimeout(() => {
+    removeMm();
+    removeCm();
+  }, 5000);
 }
+
+/*
+
+
+var c = document.getElementById("canvas");
+var canvasContext = c.getContext("2d");
+
+const svg = canvas.toSVG();
+
+var parser = new DOMParser();
+var doc = parser.parseFromString(svg, 'text/html');
+
+document.querySelector("body").appendChild(doc.body);
+
+*/
