@@ -104,13 +104,20 @@ const RoundedRect = new fabric.util.createClass(fabric.Rect, {
 canvas.zoomToPoint({ x: 725, y: 223 }, 0.05);
 
 var grid = 10;
-var vertM, horM, vertCm, horCm, verMm, horMm;
+var vertM, horM, vertTenCm, horTenCm, vertCm, horCm, verMm, horMm;
 
 var scaleX = 0;
 var scaleY = 0;
 var width = 0;
 var height = 0;
 var selected = false;
+
+var gridView = {
+  m: true,
+  tenCm: false,
+  cm: false,
+  mm: false,
+};
 
 // create grid
 
@@ -143,20 +150,10 @@ for (var i = 0; i < 10001 / grid; i++) {
       });
       canvas.add(horText);
     }
-    vertM = new fabric.Line([i * grid, 0, i * grid, 10001], {
-      stroke: "#080808",
-      strokeWidth: 10,
-      selectable: false,
-    });
-    canvas.add(vertM);
-    horM = new fabric.Line([0, i * grid, 10001, i * grid], {
-      stroke: "#080808",
-      strokeWidth: 10,
-      selectable: false,
-    });
-    canvas.add(horM);
   }
 }
+
+addM(10);
 
 // add objects
 
@@ -171,7 +168,7 @@ canvas.add(
     width: 2000,
     height: 600,
     fill: "#244",
-    stroke: "#244",
+    stroke: "transparent",
     strokeUniform: true,
     originX: "left",
     originY: "top",
@@ -352,81 +349,190 @@ canvas.on("mouse:move", function (opt) {
 });
 
 function zoomOut(zoom) {
-  if (zoom < 0.7 && zoom > 0.6) {
+  if (zoom < 19 && gridView.mm) {
     removeMm();
-  } else if (zoom < 0.15 && zoom > 0.05) {
+  } else if (zoom < 0.7 && gridView.cm) {
+    removeM();
+    addM(2);
     removeCm();
+  } else if (zoom < 0.45 && gridView.tenCm) {
+    removeM();
+    addM(5);
+    removeTenCm();
+  } else if (zoom < 0.6 && gridView.m) {
+    removeM();
+    addM(10);
   }
 }
 
 function zoomIn(zoom) {
   // Innen
-  if (zoom > 0.7 && zoom < 0.8) {
-    addMm();
-  } else if (zoom > 0.15 && zoom < 0.2) {
-    addCm();
+  if (zoom > 19 && !gridView.mm) {
+    removeM();
+    removeCm();
+    removeTenCm();
+    addM(0.1);
+    addTenCm(0.1);
+    addCm(0.1);
+    addMm(0.1);
+  } else if (zoom > 0.7 && !gridView.cm) {
+    removeM();
+    addM(2);
+    addCm(1);
+  } else if (zoom > 0.45 && !gridView.tenCm) {
+    removeM();
+    addM(5);
+    addTenCm(2);
   }
 }
 
-function removeCm() {
+function addM(width) {
+  for (var i = 0; i < 10001 / grid; i++) {
+    if (i % 100 === 0) {
+      vertM = new fabric.Line([i * grid, 0, i * grid, 10001], {
+        stroke: "#080808",
+        strokeWidth: width,
+        selectable: false,
+      });
+      canvas.add(vertM);
+      canvas.sendToBack(vertM);
+      horM = new fabric.Line([0, i * grid, 10001, i * grid], {
+        stroke: "#080808",
+        strokeWidth: width,
+        selectable: false,
+      });
+      canvas.add(horM);
+      canvas.sendToBack(horM);
+    }
+  }
+
+  gridView.m = true;
+}
+
+function removeM() {
   const objects = canvas.getObjects();
 
   for (var i = 0; i < objects.length; i++) {
-    if (objects[i].strokeWidth === 5) {
+    if (objects[i].stroke === "#080808") {
       canvas.remove(objects[i]);
     }
   }
+
+  gridView.m = false;
   canvas.renderAll();
 }
 
-function removeMm() {
-  const objects = canvas.getObjects();
-  for (var i = 0; i < objects.length; i++) {
-    if (objects[i].stroke === "#ccc") {
-      canvas.remove(objects[i]);
-    }
-  }
-  canvas.renderAll();
-}
-
-function addCm() {
+function addTenCm(width) {
   for (var i = 0; i < 10001 / grid; i++) {
     if (i % 10 === 0 && i % 100 !== 0) {
-      vertCm = new fabric.Line([i * grid, 0, i * grid, 10001], {
+      vertTenCm = new fabric.Line([i * grid, 0, i * grid, 10001], {
         stroke: "#808080",
-        strokeWidth: 5,
+        strokeWidth: width,
+        selectable: false,
+      });
+      canvas.add(vertTenCm);
+      canvas.sendToBack(vertTenCm);
+      horTenCm = new fabric.Line([0, i * grid, 10001, i * grid], {
+        stroke: "#808080",
+        strokeWidth: width,
+        selectable: false,
+      });
+      canvas.add(horTenCm);
+      canvas.sendToBack(horTenCm);
+    }
+  }
+
+  gridView.tenCm = true;
+}
+
+function removeTenCm() {
+  const objects = canvas.getObjects();
+
+  for (var i = 0; i < objects.length; i++) {
+    if (objects[i].stroke === "#808080") {
+      canvas.remove(objects[i]);
+    }
+  }
+
+  gridView.tenCm = false;
+  canvas.renderAll();
+}
+
+function addCm(width) {
+  for (var i = 0; i < 10001 / grid; i++) {
+    if (i % 1 === 0) {
+      vertCm = new fabric.Line([i * grid, 0, i * grid, 10001], {
+        stroke: "#ccc",
+        strokeWidth: width,
         selectable: false,
       });
       canvas.add(vertCm);
       canvas.sendToBack(vertCm);
       horCm = new fabric.Line([0, i * grid, 10001, i * grid], {
-        stroke: "#808080",
-        strokeWidth: 5,
+        stroke: "#ccc",
+        strokeWidth: width,
         selectable: false,
       });
       canvas.add(horCm);
       canvas.sendToBack(horCm);
     }
   }
+
+  gridView.cm = true;
 }
 
-function addMm() {
+function removeCm() {
+  const objects = canvas.getObjects();
+
+  for (var i = 0; i < objects.length; i++) {
+    if (objects[i].stroke === "#ccc") {
+      canvas.remove(objects[i]);
+    }
+  }
+
+  gridView.cm = false;
+  canvas.renderAll();
+}
+
+function addMm(width) {
   for (var i = 0; i < 10001 / grid; i++) {
-    if (i % 10 !== 0) {
-      verMm = new fabric.Line([i * grid, 0, i * grid, 10001], {
-        stroke: "#ccc",
-        selectable: false,
-      });
+    for (let j = 0; j < 10; j++) {
+      verMm = new fabric.Line(
+        [(i + j / 10) * grid, 0, (i + j / 10) * grid, 10001],
+        {
+          stroke: "#e3e3e3",
+          strokeWidth: width,
+          selectable: false,
+        }
+      );
       canvas.add(verMm);
       canvas.sendToBack(verMm);
-      horMm = new fabric.Line([0, i * grid, 10001, i * grid], {
-        stroke: "#ccc",
-        selectable: false,
-      });
+      horMm = new fabric.Line(
+        [0, (i + j / 10) * grid, 10001, (i + j / 10) * grid],
+        {
+          stroke: "#e3e3e3",
+          strokeWidth: width,
+          selectable: false,
+        }
+      );
       canvas.add(horMm);
       canvas.sendToBack(horMm);
     }
   }
+
+  gridView.mm = true;
+}
+
+function removeMm() {
+  const objects = canvas.getObjects();
+  for (var i = 0; i < objects.length; i++) {
+    if (objects[i].stroke === "#e3e3e3") {
+      canvas.remove(objects[i]);
+    }
+  }
+
+  gridView.mm = false;
+  canvas.renderAll();
 }
 
 function radius() {
@@ -502,8 +608,12 @@ function Export(e) {
   canvas.backgroundColor = "white";
   canvas.zoomToPoint({ x: 725, y: 223 }, 0.05);
   canvas.renderAll();
-
   const svg = canvas.toSVG();
+
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(svg, "text/html");
+
+  document.querySelector("body").appendChild(doc.body);
 
   //convert svg source to URI data scheme.
   var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
@@ -516,18 +626,3 @@ function Export(e) {
     removeCm();
   }, 5000);
 }
-
-/*
-
-
-var c = document.getElementById("canvas");
-var canvasContext = c.getContext("2d");
-
-const svg = canvas.toSVG();
-
-var parser = new DOMParser();
-var doc = parser.parseFromString(svg, 'text/html');
-
-document.querySelector("body").appendChild(doc.body);
-
-*/
