@@ -101,7 +101,7 @@ const RoundedRect = new fabric.util.createClass(fabric.Rect, {
   },
 });
 
-canvas.zoomToPoint({ x: 725, y: 223 }, 0.05);
+canvas.zoomToPoint({ x: 250, y: 50 }, 0.08);
 
 var grid = 10;
 var vertM, horM, vertTenCm, horTenCm, vertCm, horCm, verMm, horMm;
@@ -157,57 +157,335 @@ addM(10);
 
 // add objects
 
-canvas.add(
-  new RoundedRect({
-    topLeft: 0,
-    topRight: 0,
-    bottomLeft: 0,
-    bottomRight: 0,
-    left: 1000,
-    top: 1000,
-    width: 2000,
-    height: 600,
-    fill: "#244",
-    stroke: "transparent",
-    strokeUniform: true,
-    originX: "left",
-    originY: "top",
-    centeredRotation: true,
-    padding: 20,
-  })
-);
+const rect = new RoundedRect({
+  topLeft: 0,
+  topRight: 0,
+  bottomLeft: 0,
+  bottomRight: 0,
+  left: 1000,
+  top: 1000,
+  width: 2000,
+  height: 600,
+  fill: "#244",
+  borderColor: "green",
+  stroke: "#244",
+  strokeWidth: 0.1,
+  strokeUniform: true,
+  originX: "left",
+  originY: "top",
+  centeredRotation: true,
+  padding: 0,
+  objectCaching: false,
+});
+
+rect.setControlsVisibility({
+  tl: false,
+  tr: false,
+  bl: false,
+  br: false,
+  ml: false,
+  mt: false,
+  mr: false,
+  mb: false,
+  mtr: false,
+});
+
+canvas.add(rect);
+
+function findNewPos(distX, distY, target, obj) {
+  // See whether to focus on X or Y axis
+  if (Math.abs(distX) > Math.abs(distY)) {
+    if (distX > 0) {
+      target.set({ left: obj.left - target.width });
+    } else {
+      target.set({ left: obj.left + obj.width });
+    }
+  } else {
+    if (distY > 0) {
+      target.set({ top: obj.top - target.height });
+    } else {
+      target.set({ top: obj.top + obj.height });
+    }
+  }
+}
+
+var canvasWidth = 10000,
+  canvasHeight = 10000,
+  counter = 0,
+  rectLeft = 0,
+  snap = 100; // Pixels to snap
 
 // Move snap to grid
 
-canvas.on("object:moving", function (opt) {
-  if (opt.target.aCoords.tl.x < 0) {
-    opt.target.left = 0;
-  } else if (opt.target.aCoords.tl.y < 0) {
-    opt.target.top = 0;
-  } else {
-    var zoom = canvas.getZoom();
-    if (zoom < 0.15) {
-      opt.target
-        .set({
-          left: Math.round(opt.target.left / grid / 100) * grid * 100,
-          top: Math.round(opt.target.top / grid / 100) * grid * 100,
-        })
-        .setCoords();
-    } else if (zoom < 0.7) {
-      opt.target
-        .set({
-          left: Math.round(opt.target.left / grid / 10) * grid * 10,
-          top: Math.round(opt.target.top / grid / 10) * grid * 10,
-        })
-        .setCoords();
-    } else if (zoom > 0.7) {
-      opt.target
-        .set({
-          left: Math.round(opt.target.left / grid) * grid,
-          top: Math.round(opt.target.top / grid) * grid,
-        })
-        .setCoords();
+canvas.on("object:moving", function (options) {
+  // Sets corner position coordinates based on current angle, width and height
+  options.target.setCoords();
+
+  // Loop through objects
+  canvas.forEachObject(function (obj) {
+    if (obj === options.target) {
+      return;
+    } else if (!obj.selectable) {
+      return;
     }
+
+    // If objects intersect
+    if (
+      options.target.isContainedWithinObject(obj) ||
+      options.target.intersectsWithObject(obj) ||
+      obj.isContainedWithinObject(options.target)
+    ) {
+      var distX =
+        (obj.left + obj.width) / 2 -
+        (options.target.left + options.target.width) / 2;
+      var distY =
+        (obj.top + obj.height) / 2 -
+        (options.target.top + options.target.height) / 2;
+
+      // Set new position
+      findNewPos(distX, distY, options.target, obj);
+    }
+
+    // Snap objects to each other horizontally
+
+    // If bottom points are on same Y axis
+    if (
+      Math.abs(
+        options.target.top + options.target.height - (obj.top + obj.height)
+      ) < snap
+    ) {
+      // Snap target BL to object BR
+      if (Math.abs(options.target.left - (obj.left + obj.width)) < snap) {
+        options.target.set({ left: obj.left + obj.width });
+        options.target.set({
+          top: obj.top + obj.height - options.target.height,
+        });
+      }
+
+      // Snap target BR to object BL
+      if (
+        Math.abs(options.target.left + options.target.width - obj.left) < snap
+      ) {
+        options.target.set({ left: obj.left - options.target.width });
+        options.target.set({
+          top: obj.top + obj.height - options.target.height,
+        });
+      }
+    }
+
+    // If top points are on same Y axis
+    if (Math.abs(options.target.top - obj.top) < snap) {
+      // Snap target TL to object TR
+      if (Math.abs(options.target.left - (obj.left + obj.width)) < snap) {
+        options.target.set({ left: obj.left + obj.width });
+        options.target.set({ top: obj.top });
+      }
+
+      // Snap target TR to object TL
+      if (
+        Math.abs(options.target.left + options.target.width - obj.left) < snap
+      ) {
+        options.target.set({ left: obj.left - options.target.width });
+        options.target.set({ top: obj.top });
+      }
+    }
+
+    // Snap objects to each other vertically
+
+    // If right points are on same X axis
+    if (
+      Math.abs(
+        options.target.left + options.target.width - (obj.left + obj.width)
+      ) < snap
+    ) {
+      // Snap target TR to object BR
+      if (Math.abs(options.target.top - (obj.top + obj.height)) < snap) {
+        options.target.set({
+          left: obj.left + obj.width - options.target.width,
+        });
+        options.target.set({ top: obj.top + obj.height });
+      }
+
+      // Snap target BR to object TR
+      if (
+        Math.abs(options.target.top + options.target.height - obj.top) < snap
+      ) {
+        options.target.set({
+          left: obj.left + obj.width - options.target.width,
+        });
+        options.target.set({ top: obj.top - options.target.height });
+      }
+    }
+
+    // If left points are on same X axis
+    if (Math.abs(options.target.left - obj.left) < snap) {
+      // Snap target TL to object BL
+      if (Math.abs(options.target.top - (obj.top + obj.height)) < snap) {
+        options.target.set({ left: obj.left });
+        options.target.set({ top: obj.top + obj.height });
+      }
+
+      // Snap target BL to object TL
+      if (
+        Math.abs(options.target.top + options.target.height - obj.top) < snap
+      ) {
+        options.target.set({ left: obj.left });
+        options.target.set({ top: obj.top - options.target.height });
+      }
+    }
+  });
+
+  options.target.setCoords();
+
+  // If objects still overlap
+
+  var outerAreaLeft = null,
+    outerAreaTop = null,
+    outerAreaRight = null,
+    outerAreaBottom = null;
+
+  canvas.forEachObject(function (obj) {
+    if (obj === options.target) {
+      return;
+    } else if (!obj.selectable) {
+      return;
+    }
+
+    console.log(obj);
+    // console.log(obj.selectable);
+
+    if (
+      options.target.isContainedWithinObject(obj) ||
+      options.target.intersectsWithObject(obj) ||
+      obj.isContainedWithinObject(options.target)
+    ) {
+      var intersectLeft = null,
+        intersectTop = null,
+        intersectWidth = null,
+        intersectHeight = null,
+        intersectSize = null,
+        targetLeft = options.target.left,
+        targetRight = targetLeft + options.target.width,
+        targetTop = options.target.top,
+        targetBottom = targetTop + options.target.height,
+        objectLeft = obj.left,
+        objectRight = objectLeft + obj.width,
+        objectTop = obj.top,
+        objectBottom = objectTop + obj.height;
+
+      // Find intersect information for X axis
+      if (targetLeft >= objectLeft && targetLeft <= objectRight) {
+        intersectLeft = targetLeft;
+        intersectWidth = obj.width - (intersectLeft - objectLeft);
+      } else if (objectLeft >= targetLeft && objectLeft <= targetRight) {
+        intersectLeft = objectLeft;
+        intersectWidth = options.target.width - (intersectLeft - targetLeft);
+      }
+
+      // Find intersect information for Y axis
+      if (targetTop >= objectTop && targetTop <= objectBottom) {
+        intersectTop = targetTop;
+        intersectHeight = obj.height - (intersectTop - objectTop);
+      } else if (objectTop >= targetTop && objectTop <= targetBottom) {
+        intersectTop = objectTop;
+        intersectHeight = options.target.height - (intersectTop - targetTop);
+      }
+
+      // Find intersect size (this will be 0 if objects are touching but not overlapping)
+      if (intersectWidth > 0 && intersectHeight > 0) {
+        intersectSize = intersectWidth * intersectHeight;
+      }
+
+      // Set outer snapping area
+      if (obj.left < outerAreaLeft || outerAreaLeft == null) {
+        outerAreaLeft = obj.left;
+      }
+
+      if (obj.top < outerAreaTop || outerAreaTop == null) {
+        outerAreaTop = obj.top;
+      }
+
+      if (obj.left + obj.width > outerAreaRight || outerAreaRight == null) {
+        outerAreaRight = obj.left + obj.width;
+      }
+
+      if (obj.top + obj.height > outerAreaBottom || outerAreaBottom == null) {
+        outerAreaBottom = obj.top + obj.height;
+      }
+
+      // If objects are intersecting, reposition outside all shapes which touch
+      if (intersectSize) {
+        var distX =
+          outerAreaRight / 2 - (options.target.left + options.target.width) / 2;
+        var distY =
+          outerAreaBottom / 2 -
+          (options.target.top + options.target.height) / 2;
+
+        // Set new position
+        findNewPos(distX, distY, options.target, obj);
+      }
+    }
+  });
+
+  // Inside canvas
+  if (options.target.left < snap) {
+    options.target.set({ left: 0 });
+  }
+
+  if (options.target.top < snap) {
+    options.target.set({ top: 0 });
+  }
+
+  // Scale only in canvas
+  if (options.target.width + options.target.left > canvasWidth - snap) {
+    options.target.set({ left: canvasWidth - options.target.width });
+  }
+
+  if (options.target.height + options.target.top > canvasHeight - snap) {
+    options.target.set({ top: canvasHeight - options.target.height });
+  }
+
+  var zoom = canvas.getZoom();
+
+  // Snap to grid
+  if (zoom < 0.45) {
+    const left = Math.round(options.target.left / grid / 100) * grid * 100;
+    const top = Math.round(options.target.top / grid / 100) * grid * 100;
+    options.target.set({ left, top }).setCoords();
+    /*
+    * from here
+    if (grid % (options.target.width / 1000) === 0) {
+      const left = Math.round(options.target.left / grid / 100) * grid * 100;
+      const top = Math.round(options.target.top / grid / 100) * grid * 100;
+      options.target.set({ left, top }).setCoords();
+    } else {
+      const left =
+        Math.round(options.target.left / grid / 100) * grid * 100 -
+        options.target.width;
+      options.target.set({ left }).setCoords();
+    }
+    */
+  } else if (zoom < 1.5) {
+    options.target
+      .set({
+        left: Math.round(options.target.left / grid / 10) * grid * 10,
+        top: Math.round(options.target.top / grid / 10) * grid * 10,
+      })
+      .setCoords();
+  } else if (zoom < 19) {
+    options.target
+      .set({
+        left: Math.round(options.target.left / grid) * grid,
+        top: Math.round(options.target.top / grid) * grid,
+      })
+      .setCoords();
+  } else if (zoom >= 19) {
+    options.target
+      .set({
+        left: Math.round(Math.round(options.target.left * 100) / 100),
+        top: Math.round(Math.round(options.target.top * 100) / 100),
+      })
+      .setCoords();
   }
 });
 
@@ -253,38 +531,6 @@ canvas.on("mouse:up", function (opt) {
   }
 });
 
-// Resize snap to grid
-
-canvas.on("object:scaling", function (opt) {
-  let newWidth, newHeight;
-  var zoom = canvas.getZoom();
-  if (zoom < 0.15) {
-    newWidth =
-      Math.round((opt.target.aCoords.br.x - opt.target.aCoords.bl.x) / 1000) *
-      1000;
-    newHeight =
-      Math.round((opt.target.aCoords.bl.y - opt.target.aCoords.tl.y) / 1000) *
-      1000;
-  } else if (zoom < 0.7) {
-    newWidth =
-      Math.round((opt.target.aCoords.br.x - opt.target.aCoords.bl.x) / 100) *
-      100;
-    newHeight =
-      Math.round((opt.target.aCoords.bl.y - opt.target.aCoords.tl.y) / 100) *
-      100;
-  } else if (zoom > 0.7) {
-    newWidth =
-      Math.round((opt.target.aCoords.br.x - opt.target.aCoords.bl.x) / 10) * 10;
-    newHeight =
-      Math.round((opt.target.aCoords.bl.y - opt.target.aCoords.tl.y) / 10) * 10;
-  }
-
-  scaleX = newWidth / width;
-  scaleY = newHeight / height;
-
-  opt.target.setCoords();
-});
-
 canvas.on("object:rotating", function (opt) {
   if (opt.e.shiftKey === true) {
     var step = 15;
@@ -322,7 +568,7 @@ canvas.on("mouse:wheel", function (opt) {
   var zoom = canvas.getZoom();
   zoom *= 0.999 ** delta;
   if (zoom > 20) zoom = 20;
-  if (zoom < 0.01) zoom = 0.01;
+  if (zoom < 0.04) zoom = 0.04;
   if (delta === -100) {
     zoomIn(zoom);
   } else {
@@ -351,16 +597,25 @@ canvas.on("mouse:move", function (opt) {
 function zoomOut(zoom) {
   if (zoom < 19 && gridView.mm) {
     removeMm();
-  } else if (zoom < 0.7 && gridView.cm) {
+    removeCm();
+    removeTenCm();
     removeM();
     addM(2);
+    addTenCm(1);
+    addCm(1);
+  } else if (zoom < 1.5 && gridView.cm) {
+    removeM();
+    removeTenCm();
     removeCm();
+    addM(3);
+    addTenCm(2);
   } else if (zoom < 0.45 && gridView.tenCm) {
+    removeTenCm();
     removeM();
     addM(5);
-    removeTenCm();
-  } else if (zoom < 0.6 && gridView.m) {
+  } else if (zoom < 0.3 && zoom > 0.4) {
     removeM();
+    removeTenCm();
     addM(10);
   }
 }
@@ -375,9 +630,11 @@ function zoomIn(zoom) {
     addTenCm(0.1);
     addCm(0.1);
     addMm(0.1);
-  } else if (zoom > 0.7 && !gridView.cm) {
+  } else if (zoom > 1.5 && !gridView.cm) {
     removeM();
+    removeTenCm();
     addM(2);
+    addTenCm(2);
     addCm(1);
   } else if (zoom > 0.45 && !gridView.tenCm) {
     removeM();
@@ -387,6 +644,8 @@ function zoomIn(zoom) {
 }
 
 function addM(width) {
+  gridView.m = true;
+
   for (var i = 0; i < 10001 / grid; i++) {
     if (i % 100 === 0) {
       vertM = new fabric.Line([i * grid, 0, i * grid, 10001], {
@@ -405,11 +664,11 @@ function addM(width) {
       canvas.sendToBack(horM);
     }
   }
-
-  gridView.m = true;
 }
 
 function removeM() {
+  gridView.m = false;
+
   const objects = canvas.getObjects();
 
   for (var i = 0; i < objects.length; i++) {
@@ -418,11 +677,12 @@ function removeM() {
     }
   }
 
-  gridView.m = false;
   canvas.renderAll();
 }
 
 function addTenCm(width) {
+  gridView.tenCm = true;
+
   for (var i = 0; i < 10001 / grid; i++) {
     if (i % 10 === 0 && i % 100 !== 0) {
       vertTenCm = new fabric.Line([i * grid, 0, i * grid, 10001], {
@@ -441,11 +701,11 @@ function addTenCm(width) {
       canvas.sendToBack(horTenCm);
     }
   }
-
-  gridView.tenCm = true;
 }
 
 function removeTenCm() {
+  gridView.tenCm = false;
+
   const objects = canvas.getObjects();
 
   for (var i = 0; i < objects.length; i++) {
@@ -454,11 +714,12 @@ function removeTenCm() {
     }
   }
 
-  gridView.tenCm = false;
   canvas.renderAll();
 }
 
 function addCm(width) {
+  gridView.cm = true;
+
   for (var i = 0; i < 10001 / grid; i++) {
     if (i % 1 === 0) {
       vertCm = new fabric.Line([i * grid, 0, i * grid, 10001], {
@@ -477,11 +738,11 @@ function addCm(width) {
       canvas.sendToBack(horCm);
     }
   }
-
-  gridView.cm = true;
 }
 
 function removeCm() {
+  gridView.cm = false;
+
   const objects = canvas.getObjects();
 
   for (var i = 0; i < objects.length; i++) {
@@ -490,11 +751,12 @@ function removeCm() {
     }
   }
 
-  gridView.cm = false;
   canvas.renderAll();
 }
 
 function addMm(width) {
+  gridView.mm = true;
+
   for (var i = 0; i < 10001 / grid; i++) {
     for (let j = 0; j < 10; j++) {
       verMm = new fabric.Line(
@@ -519,11 +781,11 @@ function addMm(width) {
       canvas.sendToBack(horMm);
     }
   }
-
-  gridView.mm = true;
 }
 
 function removeMm() {
+  gridView.mm = false;
+
   const objects = canvas.getObjects();
   for (var i = 0; i < objects.length; i++) {
     if (objects[i].stroke === "#e3e3e3") {
@@ -531,7 +793,6 @@ function removeMm() {
     }
   }
 
-  gridView.mm = false;
   canvas.renderAll();
 }
 
@@ -572,26 +833,40 @@ function addToCanvas() {
   const height = document.querySelector("#length").value;
 
   console.log(width);
+  const newRect = new RoundedRect({
+    topLeft: 0,
+    topRight: 0,
+    bottomLeft: 0,
+    bottomRight: 0,
+    left: 3000,
+    top: 3000,
+    width: Number(width),
+    height: Number(height),
+    fill: "#244",
+    borderColor: "green",
+    stroke: "#244",
+    strokeWidth: 0.1,
+    strokeUniform: true,
+    originX: "left",
+    originY: "top",
+    centeredRotation: true,
+    padding: 0,
+    objectCaching: false,
+  });
 
-  canvas.add(
-    new RoundedRect({
-      topLeft: 0,
-      topRight: 0,
-      bottomLeft: 0,
-      bottomRight: 0,
-      left: 3000,
-      top: 3000,
-      width: Number(width),
-      height: Number(height),
-      fill: "#244",
-      stroke: "#244",
-      strokeUniform: true,
-      originX: "left",
-      originY: "top",
-      centeredRotation: true,
-      padding: 20,
-    })
-  );
+  newRect.setControlsVisibility({
+    tl: false,
+    tr: false,
+    bl: false,
+    br: false,
+    ml: false,
+    mt: false,
+    mr: false,
+    mb: false,
+    mtr: false,
+  });
+
+  canvas.add(newRect);
 
   close();
 }
