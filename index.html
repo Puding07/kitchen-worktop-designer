@@ -30,8 +30,10 @@
       }
 
       .add {
-        width: 15vw;
-        height: 15vh;
+        width: 20vw;
+        min-width: 350px;
+        height: 20vh;
+        min-height: 200px;
         position: absolute;
         padding: 2vw;
         border-radius: 1rem;
@@ -72,7 +74,70 @@
         display: none;
       }
 
-      .controlls {
+      .parameters {
+        width: 350px;
+        height: 210px;
+        position: relative;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      .parameters #length {
+        width: 80px;
+        height: 20px;
+        position: absolute;
+        left: -25px;
+        top: 50%;
+        margin-top: -10px;
+
+        transform: rotate(-90deg);
+
+        font-size: 120%;
+      }
+
+      .parameters #width {
+        width: 80px;
+        height: 20px;
+
+        font-size: 120%;
+      }
+
+      .parameters .top,
+      .bottom {
+        position: absolute;
+        width: 85%;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+
+      .parameters .top {
+        top: 0;
+      }
+
+      .parameters .bottom {
+        bottom: 0;
+      }
+
+      .parameters .borderRadius {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+
+        font-size: 120%;
+      }
+
+      .parameters .rectangle {
+        width: 250px;
+        height: 110px;
+        border: 1px solid #000;
+        margin: 10px;
+      }
+
+      .tools {
         min-width: 200px;
         position: absolute;
         bottom: 1rem;
@@ -85,21 +150,21 @@
         box-shadow: 0px 0px 15px #00000033;
       }
 
-      .controlls a {
+      .tools a {
         color: black;
         text-decoration: none;
       }
 
-      .controlls a:visited {
+      .tools a:visited {
         color: black;
       }
 
-      .controlls a:hover {
+      .tools a:hover {
         color: #23b6fa;
         cursor: pointer;
       }
 
-      .controlls input,
+      .tools input,
       a {
         padding: 0.5rem;
         min-width: 3rem;
@@ -108,11 +173,55 @@
 
         font-size: 140%;
         font-weight: 600;
+        cursor: pointer;
       }
 
-      .controlls input:hover {
+      .tools input:hover {
         color: #23b6fa;
+      }
+
+      .extra {
+        position: absolute;
+        right: 1rem;
+        bottom: 1rem;
+        padding: 0.5rem;
+        border-radius: 0.1rem;
+        background-color: #fff;
+
+        display: flex;
+        justify-content: space-around;
+        box-shadow: 0px 0px 15px #00000033;
+      }
+
+      .extra input {
+        padding: 0.5rem;
+        min-width: 3rem;
+        border: none;
+        background-color: transparent;
+
+        font-size: 140%;
+        font-weight: 600;
         cursor: pointer;
+      }
+
+      .help {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -175px;
+        margin-left: -225px;
+        padding: 0.5rem;
+        border-radius: 0.1rem;
+        background-color: #fff;
+        box-shadow: 0px 0px 15px #00000033;
+        height: 350px;
+        width: 450px;
+      }
+
+      .help table {
+        width: 100%;
+        height: 100%;
       }
     </style>
 
@@ -122,54 +231,95 @@
       height="1001"
       contenteditable="true"
     ></canvas>
-    <div class="controlls">
+    <div class="tools">
       <input type="button" value="⬜" id="add" />
       <input type="button" value="🕳️" id="radius" />
       <input type="button" value="🗑️" id="remove" />
       <a href="#" id="export">🔽</a>
     </div>
 
+    <div class="extra">
+      <input type="button" value="❓" id="question" />
+    </div>
+
+    <div class="help">
+      <table>
+        <tr>
+          <th><h3>Select:</h3></th>
+          <td><span>mouse left drag</span></td>
+        </tr>
+        <tr>
+          <th><h3>Move object:</h3></th>
+          <td><span>mouse left drag</span></td>
+        </tr>
+        <tr>
+          <th><h3>Pan:</h3></th>
+          <td><span>alt + mouse left</span></td>
+        </tr>
+        <tr>
+          <th><h3>Zoom to point:</h3></th>
+          <td><span>mouse wheel + / -</span></td>
+        </tr>
+      </table>
+    </div>
+
     <div class="add">
-      <input
-        type="number"
-        id="width"
-        placeholder="width"
-        min="20"
-        max="10000"
-      />
-      <input
-        type="number"
-        id="length"
-        placeholder="height"
-        min="20"
-        max="10000"
-      />
+      <div class="parameters">
+        <div class="top">
+          <input
+            class="borderRadius"
+            type="number"
+            id="topLeft"
+            placeholder="tl"
+            min="0"
+            max="1000"
+          />
+          <input
+            type="number"
+            id="width"
+            placeholder="width"
+            min="20"
+            max="10000"
+          />
+          <input
+            class="borderRadius"
+            type="number"
+            id="topRight"
+            placeholder="tr"
+            min="0"
+            max="1000"
+          />
+        </div>
+        <input
+          type="number"
+          id="length"
+          placeholder="height"
+          min="20"
+          max="10000"
+        />
+        <div class="rectangle"></div>
+        <div class="bottom">
+          <input
+            class="borderRadius"
+            type="number"
+            id="bottomLeft"
+            placeholder="bl"
+            min="0"
+            max="1000"
+          />
+          <input
+            class="borderRadius"
+            type="number"
+            id="bottomRight"
+            placeholder="br"
+            min="0"
+            max="1000"
+          />
+        </div>
+      </div>
       <div class="buttons">
         <input type="button" value="OK" id="ok" />
         <input type="button" value="Bezár" id="close" />
-      </div>
-    </div>
-
-    <div class="radius">
-      <div class="topLeft">
-        <input type="number" id="topLeftX" />
-        <input type="number" id="topLeftRadius" />
-        <input type="number" id="topLeftY" />
-      </div>
-      <div class="topRight">
-        <input type="number" id="topRightX" />
-        <input type="number" id="topRightRadius" />
-        <input type="number" id="topRightY" />
-      </div>
-      <div class="bottomLeft">
-        <input type="number" id="bottomLeftX" />
-        <input type="number" id="bottomLeftRadius" />
-        <input type="number" id="bottomLeftY" />
-      </div>
-      <div class="topRight">
-        <input type="number" id="bottomRightX" />
-        <input type="number" id="bottomRightRadius" />
-        <input type="number" id="bottomRightY" />
       </div>
     </div>
 
