@@ -451,20 +451,46 @@ canvas.on("object:moving", function (options) {
   if (zoom < 0.45) {
     const left = Math.round(options.target.left / grid / 100) * grid * 100;
     const top = Math.round(options.target.top / grid / 100) * grid * 100;
-    options.target.set({ left, top }).setCoords();
-    /*
-    * from here
-    if (grid % (options.target.width / 1000) === 0) {
-      const left = Math.round(options.target.left / grid / 100) * grid * 100;
-      const top = Math.round(options.target.top / grid / 100) * grid * 100;
-      options.target.set({ left, top }).setCoords();
-    } else {
-      const left =
-        Math.round(options.target.left / grid / 100) * grid * 100 -
-        options.target.width;
-      options.target.set({ left }).setCoords();
+    const right =
+      Math.round(options.target.aCoords.br.x / grid / 100) * grid * 100;
+    const bottom =
+      Math.round(options.target.aCoords.br.y / grid / 100) * grid * 100;
+
+    function closestFind(array, goal) {
+      return array.reduce(function (prev, curr) {
+        return Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev;
+      });
     }
-    */
+
+    if (options.target.width % (grid * 100) !== 0) {
+      const rangeX = [left, right],
+        pointerX = options.pointer.x;
+
+      let closestX = closestFind(rangeX, pointerX);
+
+      if (closestX === rangeX[1]) {
+        closestX = closestX - options.target.width;
+      }
+
+      options.target.set({ left: closestX }).setCoords();
+    } else {
+      options.target.set({ left: left }).setCoords();
+    }
+
+    if (options.target.height % (grid * 100) !== 0) {
+      const rangeY = [top, bottom],
+        pointerY = options.pointer.y;
+
+      let closestY = closestFind(rangeY, pointerY);
+
+      if (closestY === rangeY[1]) {
+        closestY = closestY - options.target.height;
+      }
+
+      options.target.set({ top: closestY }).setCoords();
+    } else {
+      options.target.set({ top: top }).setCoords();
+    }
   } else if (zoom < 1.5) {
     options.target
       .set({
