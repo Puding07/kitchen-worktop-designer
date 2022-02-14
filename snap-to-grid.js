@@ -14,6 +14,9 @@ document.querySelector("#remove").addEventListener("ontouch", remove);
 document.querySelector("#add").addEventListener("click", addObject);
 document.querySelector("#add").addEventListener("ontouch", addObject);
 
+document.querySelector("#question").addEventListener("click", helpToggle);
+document.querySelector("#question").addEventListener("ontouch", helpToggle);
+
 document.querySelector("#export").addEventListener("click", Export);
 document.querySelector("#export").addEventListener("ontouch", Export);
 
@@ -841,14 +844,27 @@ function addObject() {
   document.querySelector("#close").addEventListener("click", () => close());
   document.querySelector("#close").addEventListener("ontouch", () => close());
 
+  document.querySelector("#exit").style.display = "block";
+  document.querySelector("#exit").addEventListener("click", () => close());
+  document.querySelector("#exit").addEventListener("ontouch", () => close());
+
   document.querySelector("#ok").addEventListener("click", () => addToCanvas());
   document
     .querySelector("#ok")
     .addEventListener("ontouch", () => addToCanvas());
 }
 
+function helpToggle() {
+  document.querySelector("#help").style.display = "flex";
+  document.querySelector("#exit").style.display = "block";
+  document.querySelector("#exit").addEventListener("click", () => close());
+  document.querySelector("#exit").addEventListener("ontouch", () => close());
+}
+
 function close() {
   document.querySelector(".add").style.display = "none";
+  document.querySelector("#help").style.display = "none";
+  document.querySelector("#exit").style.display = "none";
 }
 
 function addToCanvas() {
