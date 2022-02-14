@@ -17,9 +17,6 @@ document.querySelector("#add").addEventListener("ontouch", addObject);
 document.querySelector("#export").addEventListener("click", Export);
 document.querySelector("#export").addEventListener("ontouch", Export);
 
-document.querySelector("#radius").addEventListener("click", radius);
-document.querySelector("#radius").addEventListener("ontouch", radius);
-
 var canvas = new fabric.Canvas("canvas", {
   selection: false,
 });
