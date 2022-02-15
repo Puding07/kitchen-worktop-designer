@@ -7,3 +7,7 @@ This App is built graphically design worktop for your kitchen in mm accuracy.
 - Add Radius
 - Move freely in any shape
 - You can export your work in SVG vector format.
+
+![Home](./images/home.png)
+
+![Add](./images/add.png)
