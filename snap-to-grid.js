@@ -29,77 +29,73 @@ var canvas = new fabric.Canvas("canvas", {
  * with the help of (https://pomax.github.io/bezierinfo/#circles_cubic)
  */
 
-const RoundedRect = new fabric.util.createClass(fabric.Rect, {
-  type: "roundedRect",
-  topLeft: 20,
-  topRight: 20,
-  bottomLeft: 20,
-  bottomRight: 20,
-
-  _render: function (ctx) {
-    var w = this.width,
-      h = this.height,
-      x = -this.width / 2,
-      y = -this.height / 2,
-      /*
-       * "magic number" for bezier approximations of arcs (http://hansmuller-flex.blogspot.com/2011/04/approximating-circular-arc-with-cubic.html)
-       * example is at: (https://codepen.io/nfarahani/pen/QwrMyW)
-       */
-      k = 1 - 0.5522847498; // quarter circle k = 0.551785
-    ctx.beginPath();
-
-    // top left
-    ctx.moveTo(x + this.topLeft, y);
-
-    // line to top right
-    ctx.lineTo(x + w - this.topRight, y);
-    ctx.bezierCurveTo(
-      x + w - k * this.topRight,
-      y,
-      x + w,
-      y + k * this.topRight,
-      x + w,
-      y + this.topRight
-    );
-
-    // line to bottom right
-    ctx.lineTo(x + w, y + h - this.bottomRight);
-    ctx.bezierCurveTo(
-      x + w,
-      y + h - k * this.bottomRight,
-      x + w - k * this.bottomRight,
-      y + h,
-      x + w - this.bottomRight,
-      y + h
-    );
-
-    // line to bottom left
-    ctx.lineTo(x + this.bottomLeft, y + h); // 10, 10
-    ctx.bezierCurveTo(
-      x + k * this.bottomLeft,
-      y + h,
-      x,
-      y + h - k * this.bottomLeft,
-      x,
-      y + h - this.bottomLeft
-    );
-
-    // line to top left
-    ctx.lineTo(x, y + this.topLeft); // -10, 10
-    ctx.bezierCurveTo(
-      x,
-      y + k * this.topLeft,
-      x + k * this.topLeft,
-      y,
-      x + this.topLeft,
-      y
-    );
-
-    ctx.closePath();
-
-    this._renderPaintInOrder(ctx);
-  },
+const RectPath = new fabric.util.createClass(fabric.Path, {
+  type: "roundedRectPath",
+  topLeft: 0,
+  topRight: 0,
+  bottomLeft: 0,
+  bottomRight: 0,
 });
+
+function RoundRect(start, width, height, radius) {
+  const [topRight, bottomRight, bottomLeft, topLeft] = radius;
+
+  const w = width,
+    h = height,
+    x = -width / 2,
+    y = -height / 2,
+    k = 1 - 0.5522847498;
+
+  let path = `M${start.x}, ${start.y}`;
+
+  let top = `L${start.x + w - topRight}, ${start.y}`;
+  let radiusTr = `C${start.x + w - k * topRight}, ${start.y}, ${start.x + w}, ${
+    start.y + k * topRight
+  }, ${start.x + w}, ${start.y + topRight}`;
+
+  let right = `L${start.x + w}, ${start.y + h - bottomRight}`;
+  let radiusBr = `C${start.x + w}, ${start.y + h - k * bottomRight}, ${
+    start.x + w - k * bottomRight
+  }, ${start.y + h}, ${start.x + w - topRight}, ${start.y + height}`;
+
+  let bottom = `L${start.x + bottomLeft}, ${start.y + height}`;
+  let radiusBl = `C${start.x + k * bottomLeft}, ${start.y + h}, ${start.x}, ${
+    start.y + h - k * bottomLeft
+  }, ${start.x}, ${start.y + height - bottomLeft}`;
+
+  let left = `L${start.x}, ${start.y + topLeft}`;
+  let radiusTl = `C${start.x},${start.y + k * topLeft}, ${
+    start.x + k * topLeft
+  }, ${start.y}, ${start.x + topLeft}, ${start.y}`;
+
+  path +=
+    top +
+    radiusTr +
+    right +
+    radiusBr +
+    bottom +
+    radiusBl +
+    left +
+    radiusTl +
+    "z";
+
+  return new RectPath(path, {
+    topRight,
+    bottomRight,
+    bottomLeft,
+    topLeft,
+    fill: "#244",
+    borderColor: "green",
+    stroke: "#244",
+    strokeWidth: 0.1,
+    strokeUniform: true,
+    originX: "left",
+    originY: "top",
+    centeredRotation: true,
+    padding: 0,
+    objectCaching: false,
+  });
+}
 
 canvas.zoomToPoint({ x: 250, y: 50 }, 0.08);
 
@@ -156,27 +152,7 @@ for (var i = 0; i < 10001 / grid; i++) {
 addM(10);
 
 // add objects
-
-const rect = new RoundedRect({
-  topLeft: 0,
-  topRight: 0,
-  bottomLeft: 0,
-  bottomRight: 0,
-  left: 1000,
-  top: 1000,
-  width: 2000,
-  height: 600,
-  fill: "#244",
-  borderColor: "green",
-  stroke: "#244",
-  strokeWidth: 0.1,
-  strokeUniform: true,
-  originX: "left",
-  originY: "top",
-  centeredRotation: true,
-  padding: 0,
-  objectCaching: false,
-});
+const rect = RoundRect({ x: 5000, y: 3000 }, 600, 2000, [80, 80, 80, 80]);
 
 rect.setControlsVisibility({
   tl: false,
@@ -351,7 +327,7 @@ canvas.on("object:moving", function (options) {
       return;
     }
 
-    console.log(obj);
+    // console.log(obj);
     // console.log(obj.selectable);
 
     if (
@@ -872,26 +848,12 @@ function addToCanvas() {
   const height = document.querySelector("#length").value;
 
   console.log(width);
-  const newRect = new RoundedRect({
-    topLeft: 0,
-    topRight: 0,
-    bottomLeft: 0,
-    bottomRight: 0,
-    left: 3000,
-    top: 3000,
-    width: Number(width),
-    height: Number(height),
-    fill: "#244",
-    borderColor: "green",
-    stroke: "#244",
-    strokeWidth: 0.1,
-    strokeUniform: true,
-    originX: "left",
-    originY: "top",
-    centeredRotation: true,
-    padding: 0,
-    objectCaching: false,
-  });
+  const newRect = RoundRect(
+    { x: 3000, y: 3000 },
+    Number(width),
+    Number(height),
+    [80, 80, 80, 80]
+  );
 
   newRect.setControlsVisibility({
     tl: false,
