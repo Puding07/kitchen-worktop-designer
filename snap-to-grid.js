@@ -19,6 +19,16 @@ document.querySelector("#question").addEventListener("ontouch", helpToggle);
 document.querySelector("#export").addEventListener("click", Export);
 document.querySelector("#export").addEventListener("ontouch", Export);
 
+document.querySelector("#exit").addEventListener("click", () => close());
+document.querySelector("#exit").addEventListener("ontouch", () => close());
+
+document
+  .querySelector("#ok")
+  .addEventListener("click", () => addToCanvas(), false);
+document
+  .querySelector("#ok")
+  .addEventListener("ontouch", () => addToCanvas(), false);
+
 var canvas = new fabric.Canvas("canvas", {
   selection: false,
 });
@@ -57,7 +67,7 @@ function RoundRect(start, width, height, radius) {
   let right = `L${start.x + w}, ${start.y + h - bottomRight}`;
   let radiusBr = `C${start.x + w}, ${start.y + h - k * bottomRight}, ${
     start.x + w - k * bottomRight
-  }, ${start.y + h}, ${start.x + w - topRight}, ${start.y + height}`;
+  }, ${start.y + h}, ${start.x + w - bottomRight}, ${start.y + height}`;
 
   let bottom = `L${start.x + bottomLeft}, ${start.y + height}`;
   let radiusBl = `C${start.x + k * bottomLeft}, ${start.y + h}, ${start.x}, ${
@@ -818,24 +828,13 @@ function remove() {
 
 function addObject() {
   document.querySelector(".add").style.display = "flex";
-  document.querySelector("#close").addEventListener("click", () => close());
-  document.querySelector("#close").addEventListener("ontouch", () => close());
 
   document.querySelector("#exit").style.display = "block";
-  document.querySelector("#exit").addEventListener("click", () => close());
-  document.querySelector("#exit").addEventListener("ontouch", () => close());
-
-  document.querySelector("#ok").addEventListener("click", () => addToCanvas());
-  document
-    .querySelector("#ok")
-    .addEventListener("ontouch", () => addToCanvas());
 }
 
 function helpToggle() {
   document.querySelector("#help").style.display = "flex";
   document.querySelector("#exit").style.display = "block";
-  document.querySelector("#exit").addEventListener("click", () => close());
-  document.querySelector("#exit").addEventListener("ontouch", () => close());
 }
 
 function close() {
@@ -845,15 +844,23 @@ function close() {
 }
 
 function addToCanvas() {
-  const width = document.querySelector("#width").value;
-  const height = document.querySelector("#length").value;
+  console.log("Added");
+  const width = Number(document.querySelector("#width").value);
+  const height = Number(document.querySelector("#length").value) || 0;
+  const topLeft = Number(document.querySelector("#topLeft").value) || 0;
+  const topRight = Number(document.querySelector("#topRight").value) || 0;
+  const bottomLeft = Number(document.querySelector("#bottomLeft").value) || 0;
+  const bottomRight = Number(document.querySelector("#bottomRight").value) || 0;
 
-  console.log(width);
+  console.log("topLeft", topLeft);
+
+  close();
+
   const newRect = RoundRect(
     { x: 3000, y: 3000 },
     Number(width),
     Number(height),
-    [80, 80, 80, 80]
+    [topRight, bottomRight, bottomLeft, topLeft]
   );
 
   newRect.setControlsVisibility({
@@ -869,8 +876,6 @@ function addToCanvas() {
   });
 
   canvas.add(newRect);
-
-  close();
 }
 
 function Export(e) {
