@@ -1,12 +1,11 @@
-function resizeCanvas() {
+function resizeCanvas(fabric) {
   const canvas = document.querySelector("#canvas");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = screen.width;
+  canvas.height = screen.height;
+  fabric && fabric.renderAll();
 }
 
 resizeCanvas();
-
-document.addEventListener("resize", resizeCanvas);
 
 document.querySelector("#remove").addEventListener("click", remove);
 document.querySelector("#remove").addEventListener("ontouch", remove);
@@ -23,6 +22,8 @@ document.querySelector("#export").addEventListener("ontouch", Export);
 var canvas = new fabric.Canvas("canvas", {
   selection: false,
 });
+
+window.addEventListener("resize", () => resizeCanvas(canvas));
 
 /**
  * To add radius I have to play with the bezierCurveTo and magic number...
