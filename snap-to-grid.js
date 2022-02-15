@@ -913,10 +913,12 @@ function addToCanvas() {
 function Export(e) {
   removeMm();
   removeCm();
+  removeTenCm();
+  removeM();
   canvas.renderAll();
 
-  addCm();
-  addMm();
+  addTenCm(1);
+  addM(2);
   canvas.renderAll();
 
   canvas.backgroundColor = "white";
@@ -936,7 +938,6 @@ function Export(e) {
   this.download = "canvas.svg";
 
   setTimeout(() => {
-    removeMm();
-    removeCm();
-  }, 5000);
+    removeTenCm();
+  }, 3000);
 }
