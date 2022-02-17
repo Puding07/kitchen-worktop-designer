@@ -40,6 +40,8 @@ window.addEventListener("resize", () => resizeCanvas(canvas));
  * with the help of (https://pomax.github.io/bezierinfo/#circles_cubic)
  */
 
+let count = 0;
+
 const RectPath = new fabric.util.createClass(fabric.Path, {
   type: "roundedRectPath",
   topLeft: 0,
@@ -90,7 +92,40 @@ function RoundRect(start, width, height, radius) {
     radiusTl +
     "z";
 
-  return new RectPath(path, {
+  count++;
+
+  const textCount = new fabric.Text(`${count}.`, {
+    fontSize: 100,
+    fill: "#fff",
+  });
+
+  textCount.set({
+    left: start.x + width / 2 - textCount.width / 2,
+    top: start.y + height / 2 - textCount.height / 2,
+  });
+
+  const textWidth = new fabric.Text(`${width}mm`, {
+    top: start.y + 50,
+    fontSize: 100,
+    fill: "#fff",
+  });
+
+  textWidth.set({
+    left: start.x + width / 2 - textWidth.width / 2,
+  });
+
+  const textHeight = new fabric.Text(`${height}mm`, {
+    left: start.x + 50,
+    fontSize: 100,
+    angle: -90,
+    fill: "#fff",
+  });
+
+  textHeight.set({
+    top: start.y + height / 2 + textHeight.width / 2,
+  });
+
+  const rect = new RectPath(path, {
     topRight,
     bottomRight,
     bottomLeft,
@@ -106,6 +141,10 @@ function RoundRect(start, width, height, radius) {
     padding: 0,
     objectCaching: false,
   });
+
+  return (group = new fabric.Group([rect, textWidth, textHeight, textCount], {
+    objectCaching: false,
+  }));
 }
 
 canvas.zoomToPoint({ x: 250, y: 50 }, 0.08);
